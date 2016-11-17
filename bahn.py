@@ -6,11 +6,17 @@ from Crypto.Cipher import AES
 import codecs
 import datetime
 import re
+
+
+
 class BahnAPI():
     debug = False
     base_url = "http://reiseauskunft.bahn.de/bin/mgate.exe?checksum={checksum}"
-    redtnCards = {"25_1": 1, "25_2": 2, "50_1": 3, "50_2": 4}
+    redtnCards = {"": 0, "25_1": 1, "25_2": 2, "50_1": 3, "50_2": 4}
     traveler_types = {"adult": "E", "child": "K", "infant": "B"}
+    aid = "rGhXPq+xAlvJd8T8cMnojdD0IoaOY53X7DPAbcXYe5g=" # from res/raw/haf_config.properties of DBNavigator
+    aid2 = "n91dB8Z77MLdoR0K" # from res/raw/haf_config.properties of DBNavigator
+    key = bytes([97, 72, 54, 70, 56, 122, 82, 117, 105, 66, 110, 109, 51, 51, 102, 85]) # from de/hafas/g/a/b.java of DBNavigator
     def searchLocation(self, term):
         data = {"svcReqL":[{"meth":"LocMatch","req":{"input":{"field":"S","loc":{"name":term}}}}]}
         search_request = self.sendPostRequest(data)
@@ -27,7 +33,7 @@ class BahnAPI():
         search_results = {"results":[]}
         real_start = self.searchLocation(start)[0]
         real_end = self.searchLocation(end)[0]
-        traveler_profiles = [{"type":self.traveler_type[traveler[0]]} if traveler[1] == None else {"type":self.traveler_types[traveler[0]], "redtnCard":self.redtnCards[traveler[1]]} for traveler in travelers]
+        traveler_profiles = [{"type":self.traveler_types[traveler[0]]} if traveler[1] == None else {"type":self.traveler_types[traveler[0]], "redtnCard":self.redtnCards[traveler[1]]} for traveler in travelers]
         data = {"svcReqL":[{"cfg":{"polyEnc":"GPA"},"meth":"TripSearch","req":{"outDate":start_datetime.strftime("%Y%m%d"),"outTime":start_datetime.strftime("%H%M%S"),"arrLocL":[real_end],"depLocL":[real_start],"getPasslist":True,"trfReq":{"tvlrProf":traveler_profiles}, "frwd": True }}]}
         if ctx:
             data["svcReqL"][0]["req"]["ctxScr"] = ctx
@@ -112,7 +118,7 @@ class BahnAPI():
         return datetime.datetime.strptime(start_date, "%Y%m%d") + dur
 
     def sendPostRequest(self, data, headers={}):
-        data["auth"] = {"aid":"n91dB8Z77MLdoR0K","type":"AID"} # from res/raw/haf_config.properties of DBNavigator
+        data["auth"] = {"aid":self.aid2 ,"type":"AID"} # from res/raw/haf_config.properties of DBNavigator
         data["client"] = {"id":"DB","name":"DB Navigator","type":"AND","v":15120000}
         data["ver"] = "1.10"
         data["ext"] = "DB.R15.12.a"
@@ -132,10 +138,9 @@ class BahnAPI():
 
     def getSecret(self):
         unpad = lambda s : s[:-ord(s[len(s)-1:])] # http://stackoverflow.com/a/12525165/3890934
-        enc = base64.b64decode("rGhXPq+xAlvJd8T8cMnojdD0IoaOY53X7DPAbcXYe5g=") # from res/raw/haf_config.properties of DBNavigator
-        key = bytes([97, 72, 54, 70, 56, 122, 82, 117, 105, 66, 110, 109, 51, 51, 102, 85]) # from de/hafas/g/a/b.java of DBNavigator
+        enc = base64.b64decode(self.aid)
         iv = codecs.decode("00"*16, "hex")
-        cipher = AES.new(key, AES.MODE_CBC, iv)
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
         dec = unpad(cipher.decrypt(enc).decode("utf-8"))
         return dec
 
