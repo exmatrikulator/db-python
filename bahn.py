@@ -34,7 +34,7 @@ class BahnAPI():
         real_start = self.searchLocation(start)[0]
         real_end = self.searchLocation(end)[0]
         traveler_profiles = [{"type":self.traveler_types[traveler[0]]} if traveler[1] == None else {"type":self.traveler_types[traveler[0]], "redtnCard":self.redtnCards[traveler[1]]} for traveler in travelers]
-        data = {"svcReqL":[{"cfg":{"polyEnc":"GPA"},"meth":"TripSearch","req":{"outDate":start_datetime.strftime("%Y%m%d"),"outTime":start_datetime.strftime("%H%M%S"),"arrLocL":[real_end],"depLocL":[real_start],"getPasslist":True,"trfReq":{"tvlrProf":traveler_profiles}, "frwd": True }}]}
+        data = {"svcReqL":[{"cfg":{"polyEnc":"GPA"},"meth":"TripSearch","req":{"outDate":start_datetime.strftime("%Y%m%d"),"outTime":start_datetime.strftime("%H:%M:%S"),"arrLocL":[real_end],"depLocL":[real_start],"getPasslist":True,"trfReq":{"tvlrProf":traveler_profiles}, "frwd": True }}]}
         if ctx:
             data["svcReqL"][0]["req"]["ctxScr"] = ctx
         search_request = self.sendPostRequest(data)
