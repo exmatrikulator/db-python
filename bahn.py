@@ -16,7 +16,7 @@ class BahnAPI():
         search_request = self.sendPostRequest(data)
         response = self.cleanResponse(search_request.json())
         search_results = []
-        if response["cInfo"]["code"] == "OK":
+        if response["svcResL"][0]["err"] == "OK":
             for response_part in response["svcResL"]:
                 if response_part["err"] == "OK" and response_part["meth"] == "LocMatch":
                     for result in response_part["res"]["match"]["locL"]:
@@ -37,7 +37,7 @@ class BahnAPI():
         if self.debug:
             print(json.dumps(response, indent=4))
 
-        if response["cInfo"]["code"] == "OK":
+        if response["svcResL"][0]["err"] == "OK":
             for response_part in response["svcResL"]:
                 if response_part["err"] == "OK" and response_part["meth"] == "TripSearch":
                     commons = response_part["res"]["common"]
@@ -49,12 +49,12 @@ class BahnAPI():
                             "days_human":result["sDays"]["sDaysI"] if "sDaysI" in result["sDays"] else "",
                             "departure": {
                                 "time": self.getFinalTime(result["date"], result["dep"]["dTimeS"]),
-                                "platform": result["dep"]["dPlatfS"],
+                                #"platform": result["dep"]["dPlatfS"],
                                 "stop": real_start
                             },
                             "arrival": {
                                 "time": self.getFinalTime(result["date"], result["arr"]["aTimeS"]),
-                                "platform": result["arr"]["aPlatfS"],
+                                #"platform": result["arr"]["aPlatfS"],
                                 "stop": real_end
                             },
                             "duration": datetime.timedelta(hours=int(result["dur"][:-4]), minutes=int(result["dur"][-4:-2]), seconds=int(result["dur"][-2:])),
@@ -71,12 +71,12 @@ class BahnAPI():
                             section_dict =  {
                                 "departure": {
                                     "time": self.getFinalTime(result["date"], result["dep"]["dTimeS"]),
-                                    "platform": section["dep"]["dPlatfS"],
+                                    #"platform": section["dep"]["dPlatfS"],
                                     "location": commons["locL"][section["dep"]["locX"]]["name"]
                                 },
                                 "arrival": {
                                     "time": self.getFinalTime(result["date"], result["arr"]["aTimeS"]),
-                                    "platform": section["arr"]["aPlatfS"],
+                                    #"platform": section["arr"]["aPlatfS"],
                                     "location": commons["locL"][section["arr"]["locX"]]["name"]
                                 },
                                 "stops": []
@@ -87,7 +87,7 @@ class BahnAPI():
                                 loc = commons["locL"][stop["locX"]]
                                 stop_dict = {
                                     "stop":loc,
-                                    "platform": stop["aPlatfS"] if "aPlatfS" in stop else stop["dPlatfS"] if "dPlatfS" in stop else None
+                                    #"platform": stop["aPlatfS"] if "aPlatfS" in stop else stop["dPlatfS"] if "dPlatfS" in stop else None
                                 }
                                 if "dTimeS" in stop: stop_dict["departure"] =  {"time": self.getFinalTime(result["date"], stop["dTimeS"])}
                                 if "aTimeS" in stop: stop_dict["arrival"] =  {"time": self.getFinalTime(result["date"], stop["aTimeS"])}
